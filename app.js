@@ -1,6 +1,7 @@
 const express = require('express');
 const mongoose = require('mongoose');
 const { info, error } = require('./utils/logger');
+const { getToken } = require('./utils/middleware');
 const todosRouter = require('./controllers/todos');
 const usersRouter = require('./controllers/users');
 const loginRouter = require('./controllers/login');
@@ -18,7 +19,7 @@ mongoose.connect(config.MONGODB_URI)
 
 // Middleware
 app.use(express.json());
-app.use('/api/todos', todosRouter);
+app.use('/api/todos', getToken, todosRouter);
 app.use('/api/users', usersRouter);
 app.use('/api/login', loginRouter);
 
