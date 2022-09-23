@@ -1,6 +1,9 @@
+/* eslint-disable no-unneeded-ternary */
+/* eslint-disable no-use-before-define */
 /* eslint-disable no-underscore-dangle */
 /* eslint-disable prefer-destructuring */
 const todosRouter = require('express').Router();
+const jwt = require('jsonwebtoken');
 const Todo = require('../models/todo');
 const User = require('../models/user');
 // Routes
@@ -14,12 +17,21 @@ todosRouter.get('/', async (req, res) => {
 
 todosRouter.post('/', async (req, res) => {
   const body = req.body;
-  const user = await User.findById(body.userId);
+  const getToken = (request) => {
+    const authorization = request.get('authorization');
+    if (authorization && authorization.toLowerCase().startsWith('bearer ')) {
+      return authorization.substring(7);
+    }
+    return null;
+  };
+  const decodedUser = await jwt.verify(getToken(req), process.env.SECRET);
+
+  const user = await User.findById(decodedUser.id);
   const task = new Todo({
     user: user._id,
     task: body.task,
-    important: body.important,
-    completed: body.completed,
+    important: body.important === undefined ? false : true,
+    completed: body.completed === undefined ? false : true,
   });
   user.tasks = user.tasks.concat(task._id);
   await user.save();
